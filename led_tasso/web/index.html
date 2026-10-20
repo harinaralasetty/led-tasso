@@ -4,85 +4,197 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>A little time with Coach · Led Tasso</title>
-  <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css">
+  <title>Coach Led Tasso · your corner coach</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
 </head>
 <body>
+  <div class="backdrop" aria-hidden="true"></div>
   <main class="shell">
     <header class="topbar">
-      <a class="wordmark" href="/" aria-label="Led Tasso home"><span class="brand-mark" aria-hidden="true">lt.</span> LED TASSO</a>
-      <span class="local-badge"><span aria-hidden="true">●</span> A little room to regroup</span>
+      <a class="brand" href="/" aria-label="Led Tasso home"><span class="brand-mark" aria-hidden="true">LT</span><span class="brand-name">Led Tasso</span></a>
+      <span class="pill"><span class="live-dot" aria-hidden="true"></span>Runs on your computer</span>
     </header>
 
     <div class="workspace">
-      <section class="coach-panel" aria-labelledby="coach-heading">
-        <div class="coach-intro"><p class="eyebrow">IN YOUR CORNER</p><h1 id="coach-heading">Small steps.<br>Good company.</h1><p>No perfect game plan needed.<br>Let’s start with what’s on your mind.</p></div>
+      <section class="stage-card" aria-labelledby="coach-heading">
+        <svg class="pitch" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="40" y="40" width="520" height="760" rx="6"/>
+            <line x1="40" y1="420" x2="560" y2="420"/>
+            <circle cx="300" cy="420" r="92"/>
+            <circle cx="300" cy="420" r="5" fill="currentColor"/>
+            <rect x="170" y="40" width="260" height="110"/>
+            <rect x="235" y="40" width="130" height="44"/>
+            <path d="M240 150a60 60 0 0 0 120 0"/>
+          </g>
+        </svg>
+        <div class="floodlight floodlight-left" aria-hidden="true"></div>
+        <div class="floodlight floodlight-right" aria-hidden="true"></div>
+
+        <div class="stage-copy">
+          <p class="kicker">Your corner coach</p>
+          <h1 id="coach-heading">Talk it through.<br><span>Win the next play.</span></h1>
+          <p class="lede">Warm, honest pep talks for whatever is on your mind. He remembers what matters to you.</p>
+        </div>
+
         <div class="stage">
-          <svg id="coach" class="idle" viewBox="0 0 420 450" role="img" aria-labelledby="coach-title coach-desc">
+          <svg id="coach" class="idle" viewBox="0 0 400 480" role="img" aria-labelledby="coach-title coach-desc">
             <title id="coach-title">Coach Led Tasso</title>
-            <desc id="coach-desc">An original smiling coach with a round face, blue baseball cap, striped team scarf, and a whistle on a cord, ready to cheer you on.</desc>
-            <ellipse class="ground" cx="210" cy="422" rx="132" ry="15"/>
-            <g class="coach-body">
-              <path fill="#294f60" d="M148 350h126l12 64h-67l-9-40-9 40h-64z"/>
-              <path fill="#f7e6c9" stroke="#254c50" stroke-width="4" d="M144 411h59v15h-72q-2-13 13-15m79 0h55q16 2 13 15h-68z"/>
-              <path fill="#e8a04a" stroke="#254c50" stroke-width="4" d="M144 243q-26 6-35 36l-15 55 29 10 24-57"/>
-              <g class="wave-arm">
-                <path fill="#e8a04a" stroke="#254c50" stroke-width="4" d="m276 253 35 24 28-60 24 13q-13 81-42 81l-54-30"/>
-                <path fill="#c98763" stroke="#254c50" stroke-linejoin="round" stroke-width="4" d="m338 224-7-24q-3-12 4-14 6-2 11 14l-1-39q0-10 7-10 7 0 7 12l2 20 2-31q1-10 8-8 6 1 5 12l-1 29 7-22q3-9 9-5 5 3 2 12l-8 27 6-10q6-7 11-2 4 4-2 12l-28 34z"/>
-              </g>
-              <path fill="#e8a04a" stroke="#254c50" stroke-width="4" d="M151 240q59-20 118 0l20 114q-76 24-155 0z"/>
-              <path fill="none" stroke="#bd7432" stroke-width="3" d="m151 344 119 1m-121-12 4-32m116 33-4-32"/>
-              <path fill="#c98763" stroke="#254c50" stroke-width="4" d="m96 329-4 17q-1 17 12 21 13 3 17-11l4-19"/>
-              <path fill="none" stroke="#254c50" stroke-width="3" d="m181 262 30 61 33-61"/>
-              <g transform="translate(210 318) rotate(-12)"><path fill="#f8f4e6" stroke="#254c50" stroke-width="3" d="M-9 0h23v10H5q-1 15-13 11-12-6-1-21z"/><circle cx="-4" cy="11" r="3" fill="#254c50"/></g>
-              <g class="head">
-                <path fill="#c98763" stroke="#254c50" stroke-width="4" d="M184 216h53v39q-26 18-53-1z"/>
-                <ellipse cx="126" cy="168" rx="18" ry="23" fill="#c98763" stroke="#254c50" stroke-width="4"/>
-                <ellipse cx="293" cy="168" rx="18" ry="23" fill="#c98763" stroke="#254c50" stroke-width="4"/>
-                <path fill="#dda17b" stroke="#254c50" stroke-width="4" d="M128 126q1-66 82-66t82 66v50q-5 65-82 67-77-2-82-67z"/>
-                <path fill="#386b82" stroke="#254c50" stroke-width="4" d="M124 128q-7-76 83-78 82-2 87 77-82-16-170 1z"/>
-                <path fill="none" stroke="#7ea8b3" stroke-width="3" d="M210 54q-30 19-28 58m30-58q29 16 31 58"/>
-                <path fill="#f4ce76" stroke="#254c50" stroke-width="4" d="M120 118q91-17 177 2l13 17q-96-13-188 7-11-8-2-26z"/>
-                <path fill="none" stroke="#254c50" stroke-linecap="round" stroke-width="4" d="m196 92 8 8 17-19"/>
-                <g class="eyes" fill="#254c50"><ellipse cx="170" cy="164" rx="5" ry="7"/><ellipse cx="250" cy="164" rx="5" ry="7"/></g>
-                <path fill="none" stroke="#89583e" stroke-width="3" stroke-linecap="round" d="m155 151 24-3m61 0 24 3m-56 17-5 19h12"/>
-                <ellipse fill="#c97e60" cx="151" cy="190" rx="13" ry="7"/><ellipse fill="#c97e60" cx="270" cy="190" rx="13" ry="7"/>
-                <g class="mouth"><path fill="#683d37" stroke="#254c50" stroke-width="3" d="M180 198q31 12 62-1-9 29-32 28-22-1-30-27z"/><path fill="#fff4dd" d="M185 201q25 9 51 0l-5 9q-22 5-41-1z"/></g>
-              </g>
-              <path fill="#356c68" stroke="#254c50" stroke-width="4" d="M174 237q36 18 72 0l11 20q-48 29-96 0z"/>
-              <path fill="#356c68" stroke="#254c50" stroke-width="4" d="m175 259 31 8-16 61-30-9z"/>
-              <path fill="none" stroke="#f4ce76" stroke-width="8" d="m169 280 30 8m-35 12 30 8m-23-65 8 19m18-17 1 20m24-21-4 20m24-25-9 19"/>
-              <path fill="none" stroke="#254c50" stroke-width="3" d="m162 319-3 8m11-6-2 8m11-6-2 8m11-5-1 8"/>
+            <desc id="coach-desc">An original cartoon coach in a red cap with a white star, a navy and red track jacket and a whistle, smiling and ready to cheer you on.</desc>
+            <ellipse class="shadow" cx="200" cy="456" rx="104" ry="13"/>
+
+            <g class="confetti" aria-hidden="true">
+              <rect x="70" y="40" width="10" height="16" rx="2" fill="#ff3b55"/>
+              <rect x="112" y="18" width="8" height="14" rx="2" fill="#ffffff"/>
+              <rect x="150" y="54" width="10" height="16" rx="2" fill="#ffd25e"/>
+              <rect x="246" y="22" width="9" height="15" rx="2" fill="#ff3b55"/>
+              <rect x="286" y="48" width="10" height="16" rx="2" fill="#ffffff"/>
+              <rect x="326" y="16" width="8" height="14" rx="2" fill="#ffd25e"/>
+              <rect x="352" y="60" width="10" height="16" rx="2" fill="#7fb2ff"/>
+              <rect x="40" y="86" width="8" height="14" rx="2" fill="#7fb2ff"/>
+              <rect x="200" y="6" width="9" height="15" rx="2" fill="#ffffff"/>
+              <rect x="94" y="96" width="9" height="14" rx="2" fill="#ffd25e"/>
+              <rect x="314" y="96" width="9" height="14" rx="2" fill="#ff3b55"/>
+              <rect x="178" y="70" width="8" height="13" rx="2" fill="#7fb2ff"/>
             </g>
-            <g class="thought-bubble" aria-hidden="true"><circle cx="303" cy="90" r="5"/><circle cx="320" cy="73" r="8"/><rect x="320" y="18" width="85" height="42" rx="21"/><g class="thought-dots"><circle cx="340" cy="39" r="4"/><circle cx="362" cy="39" r="4"/><circle cx="384" cy="39" r="4"/></g></g>
+
+            <g class="body">
+              <g class="legs">
+                <rect x="160" y="330" width="36" height="96" rx="14" fill="#0f2357"/>
+                <rect x="204" y="330" width="36" height="96" rx="14" fill="#0f2357"/>
+                <rect x="186" y="336" width="5" height="84" rx="2.5" fill="#e11d48"/>
+                <rect x="209" y="336" width="5" height="84" rx="2.5" fill="#e11d48"/>
+                <path d="M150 422h48q10 0 10 12v6h-66v-4q0-14 8-14z" fill="#ffffff"/>
+                <path d="M202 422h48q8 0 8 14v4h-66v-6q0-12 10-12z" fill="#ffffff"/>
+                <rect x="142" y="436" width="66" height="6" rx="3" fill="#e11d48"/>
+                <rect x="192" y="436" width="66" height="6" rx="3" fill="#e11d48"/>
+              </g>
+
+              <g class="arm arm-left">
+                <path d="M146 226q-26 4-32 34l-12 62q-2 12 10 14l14 2q10 0 12-12l12-62z" fill="#1d3f99"/>
+                <path d="M100 314l28 4-2 12-28-4z" fill="#e11d48"/>
+                <circle cx="111" cy="344" r="14" fill="#f3c6a2"/>
+              </g>
+
+              <g class="torso">
+                <path d="M128 250q0-32 34-36l38-6 38 6q34 4 34 36l6 92q-78 22-156 0z" fill="#1d3f99"/>
+                <path d="M128 250q0-32 34-36l38-6 38 6q34 4 34 36l-1 10q-71-20-142 0z" fill="#e11d48"/>
+                <path d="M124 330q76 22 152 0" fill="none" stroke="#e11d48" stroke-width="7" stroke-linecap="round"/>
+                <line x1="200" y1="226" x2="200" y2="338" stroke="#ffffff" stroke-opacity=".55" stroke-width="3"/>
+                <path d="M174 208l26 22 26-22" fill="none" stroke="#ffffff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M182 214q18 58 18 68q0-10 18-68" fill="none" stroke="#ff3b55" stroke-width="3"/>
+                <g class="whistle">
+                  <rect x="190" y="282" width="26" height="13" rx="6.5" fill="#dfe6f3"/>
+                  <circle cx="194" cy="289" r="8" fill="#f4f7fc"/>
+                  <circle cx="194" cy="289" r="3" fill="#8a97b4"/>
+                </g>
+              </g>
+
+              <g class="head">
+                <rect x="186" y="192" width="28" height="26" rx="8" fill="#e3ad87"/>
+                <circle cx="131" cy="148" r="14" fill="#eab48f"/>
+                <circle cx="269" cy="148" r="14" fill="#eab48f"/>
+                <circle cx="200" cy="142" r="68" fill="#f3c6a2"/>
+                <path d="M134 118q-6 22 2 38l11-6q-5-15 0-30z" fill="#5b3a24"/>
+                <path d="M266 118q6 22-2 38l-11-6q5-15 0-30z" fill="#5b3a24"/>
+
+                <path d="M128 112q2-66 72-68 70 2 72 68z" fill="#e11d48"/>
+                <path d="M200 46v66" stroke="#b8123a" stroke-width="3"/>
+                <circle cx="200" cy="47" r="6" fill="#b8123a"/>
+                <polygon points="200,73 202.6,80.4 210.5,80.6 204.3,85.4 206.5,92.9 200,88.5 193.5,92.9 195.7,85.4 189.5,80.6 197.4,80.4" fill="#ffffff"/>
+                <path d="M118 112h164q22 0 26 12H92q4-12 26-12z" fill="#0f2357"/>
+
+                <g class="brows" stroke="#5b3a24" stroke-width="5" stroke-linecap="round" fill="none">
+                  <path class="brow brow-left" d="M162 124q14-8 28-2"/>
+                  <path class="brow brow-right" d="M210 122q14-6 28 2"/>
+                </g>
+                <ellipse cx="176" cy="146" rx="13" ry="15" fill="#ffffff"/>
+                <ellipse cx="224" cy="146" rx="13" ry="15" fill="#ffffff"/>
+                <g class="pupils">
+                  <circle cx="177" cy="148" r="7" fill="#0b1f44"/>
+                  <circle cx="225" cy="148" r="7" fill="#0b1f44"/>
+                  <circle cx="180" cy="144" r="2.5" fill="#ffffff"/>
+                  <circle cx="228" cy="144" r="2.5" fill="#ffffff"/>
+                </g>
+                <g class="lids" fill="#f3c6a2">
+                  <rect x="161" y="129" width="30" height="34" rx="12"/>
+                  <rect x="209" y="129" width="30" height="34" rx="12"/>
+                </g>
+                <path d="M198 154q-7 12 2 16" fill="none" stroke="#d9987a" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="155" cy="172" rx="11" ry="6" fill="#f08b84" opacity=".55"/>
+                <ellipse cx="245" cy="172" rx="11" ry="6" fill="#f08b84" opacity=".55"/>
+                <path class="mouth-smile" d="M178 180q22 18 44 0" fill="none" stroke="#8c2430" stroke-width="5" stroke-linecap="round"/>
+                <g class="mouth-open">
+                  <path d="M176 177q24 34 48 0q-24 6-48 0z" fill="#7a1a2b"/>
+                  <path d="M188 192q12 9 24 0q-12-7-24 0z" fill="#ef6f78"/>
+                  <path d="M180 178q20 5 40 0v5q-20 4-40 0z" fill="#ffffff"/>
+                </g>
+              </g>
+              <g class="arm arm-right">
+                <path d="M254 226q26 4 32 34l12 62q2 12-10 14l-14 2q-10 0-12-12l-12-62z" fill="#1d3f99"/>
+                <path d="M300 314l-28 4 2 12 28-4z" fill="#e11d48"/>
+                <circle cx="289" cy="344" r="14" fill="#f3c6a2"/>
+              </g>
+            </g>
+
+            <g class="thought" aria-hidden="true">
+              <circle cx="288" cy="96" r="6" fill="#ffffff"/>
+              <circle cx="304" cy="76" r="9" fill="#ffffff"/>
+              <rect x="300" y="16" width="90" height="44" rx="22" fill="#ffffff"/>
+              <circle class="dot" cx="324" cy="38" r="5" fill="#1d3f99"/>
+              <circle class="dot" cx="345" cy="38" r="5" fill="#1d3f99"/>
+              <circle class="dot" cx="366" cy="38" r="5" fill="#1d3f99"/>
+            </g>
           </svg>
           <div class="coach-caption"><span class="status-dot" aria-hidden="true"></span><span id="coach-status">Ready when you are</span></div>
         </div>
-        <footer class="coach-note"><span aria-hidden="true">✳</span> A small conversation can be a good start.</footer>
       </section>
 
-      <section class="chat-panel" aria-labelledby="chat-heading">
-        <header class="chat-header"><div><p class="eyebrow">YOUR SIDELINE CHAT</p><h2 id="chat-heading">A little time with Coach</h2></div><span id="backend-badge" class="backend-badge">Connecting</span></header>
+      <section class="chat-card" aria-labelledby="chat-heading">
+        <header class="chat-header">
+          <span class="avatar" aria-hidden="true">LT</span>
+          <div class="chat-title"><h2 id="chat-heading">Coach Led Tasso</h2><p><span class="online-dot" aria-hidden="true"></span>In your corner</p></div>
+          <span id="backend-badge" class="backend-badge">Connecting</span>
+        </header>
+
         <div id="messages" class="messages" role="region" aria-label="Conversation" tabindex="0">
-          <article class="message coach-message"><p class="speaker">COACH</p><p class="bubble">Hey there. Pull up a spot on the bench. What’s one thing you’d like to work through today?</p></article>
+          <article class="message coach-message"><p class="speaker">COACH</p><p class="bubble">Hey there, pull up a spot on the bench. What’s one thing you’d like to work through today?</p></article>
         </div>
         <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+        <div class="chips" id="chips" aria-label="Conversation starters">
+          <button type="button" class="chip" data-text="I'm nervous about something coming up this week.">I’m nervous about this week</button>
+          <button type="button" class="chip" data-text="Can you give me a quick pep talk?">Quick pep talk</button>
+          <button type="button" class="chip" data-text="Help me pick one small goal for today.">Pick one small goal</button>
+        </div>
+
         <form id="chat-form" class="composer">
-          <label for="message">What’s on your mind?</label>
-          <div class="input-row"><textarea id="message" name="message" rows="2" maxlength="2000" placeholder="A goal, a worry, or just a hello…" aria-describedby="input-hint" required></textarea><button id="send" type="submit">Send <span aria-hidden="true">↗</span></button></div>
+          <label for="message" class="sr-only">Message Coach</label>
+          <div class="input-row">
+            <textarea id="message" name="message" rows="1" maxlength="2000" placeholder="Tell Coach what’s on your mind…" aria-describedby="input-hint" required></textarea>
+            <button id="send" type="submit" class="send-button"><span class="sr-only">Send</span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
           <div class="input-footer"><span id="input-hint">Enter to send · Shift + Enter for a new line</span><span id="character-count">0 / 2000</span></div>
         </form>
+
         <details class="memory-drawer" id="memory-drawer">
-          <summary>What Coach remembers <span id="memory-count">0 facts</span></summary>
-          <div class="memory-content"><p class="memory-help">Little things you’ve shared, kept on this computer for next time. Forgetting also resets recent conversation context.</p><ol id="facts"></ol><p id="empty-memory">A fresh notebook. Nothing remembered yet.</p><button id="clear-memory" class="quiet-button" type="button" disabled>Clear all memories</button>
-            <div id="clear-confirmation" class="confirmation" hidden><p>Clear all facts and recent conversation context? Your visible chat stays here until you reload.</p><div><button id="confirm-clear" type="button">Yes, clear memory</button><button id="cancel-clear" class="quiet-button" type="button">Keep memories</button></div></div>
+          <summary><span>What Coach remembers</span> <span id="memory-count" class="count">0 facts</span></summary>
+          <div class="memory-content">
+            <p class="memory-help">Things you’ve shared, kept only on this computer. Forgetting also resets recent conversation context.</p>
+            <ol id="facts"></ol>
+            <p id="empty-memory" class="empty">A fresh notebook. Nothing remembered yet.</p>
+            <button id="clear-memory" class="quiet-button" type="button" disabled>Clear all memories</button>
+            <div id="clear-confirmation" class="confirmation" hidden>
+              <p>Clear all facts and recent conversation context? Your visible chat stays until you reload.</p>
+              <div><button id="confirm-clear" class="danger-button" type="button">Yes, clear memory</button><button id="cancel-clear" class="quiet-button" type="button">Keep memories</button></div>
+            </div>
           </div>
         </details>
-        <footer class="chat-note">An original coach. A bit of encouragement. One step at a time.</footer>
       </section>
     </div>
+    <footer class="site-note">An original character. Not affiliated with any show, studio or streaming service.</footer>
     <noscript><p class="no-script">Please enable JavaScript to chat with Coach. The terminal version also works offline with the fake backend.</p></noscript>
   </main>
 </body>

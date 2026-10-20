@@ -110,6 +110,7 @@ def api(server, path="/api/state", data=None, **kwargs):
     ("/index.html", "text/html", b"chat-form"),
     ("/app.js", "text/javascript", b"textContent"),
     ("/style.css", "text/css", b"prefers-reduced-motion"),
+    ("/favicon.svg", "image/svg+xml", b"<svg"),
 ])
 def test_static_files_and_content_types(server, path, content_type, marker):
     status, headers, body = request(server, path)

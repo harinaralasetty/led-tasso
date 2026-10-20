@@ -47,6 +47,26 @@ function bubble(text, who, error = false) {
   return body;
 }
 
+let typingIndicator = null;
+
+function showTyping() {
+  const article = document.createElement("article");
+  article.className = "message coach-message typing";
+  article.setAttribute("aria-hidden", "true");
+  const body = document.createElement("p");
+  body.className = "bubble";
+  for (let i = 0; i < 3; i += 1) body.append(document.createElement("span"));
+  article.append(body);
+  messages.append(article);
+  typingIndicator = article;
+  scrollChat();
+}
+
+function hideTyping() {
+  if (typingIndicator) typingIndicator.remove();
+  typingIndicator = null;
+}
+
 function showError(error) {
   bubble(error.message, "coach", true);
   announcer.textContent = `Coach: ${error.message}`;
@@ -168,14 +188,18 @@ form.addEventListener("submit", async event => {
   bubble(message, "user");
   input.value = "";
   document.getElementById("character-count").textContent = "0 / 2000";
+  document.getElementById("chips").hidden = true;
   setCoach("thinking", "Coach is thinking it through…");
+  showTyping();
   try {
     const result = await api("/api/chat", {message});
+    hideTyping();
     await typeReply(result.reply);
     if (result.remembered.length) cheer("A little thing remembered");
     else setCoach("idle", "Ready when you are");
     await refreshState();
   } catch (error) {
+    hideTyping();
     setCoach("idle", "A small snag. We can try again.");
     showError(error);
   } finally {
@@ -196,6 +220,25 @@ cancelClear.addEventListener("click", () => {
   clearButton.focus();
 });
 confirmClear.addEventListener("click", () => mutateMemory("/api/memory/clear", {confirm: true}));
+
+for (const chip of document.querySelectorAll(".chip")) {
+  chip.addEventListener("click", () => {
+    input.value = chip.dataset.text;
+    input.dispatchEvent(new Event("input"));
+    input.focus();
+  });
+}
+
+// Coach's eyes follow the pointer (skipped when the user prefers reduced motion).
+window.addEventListener("pointermove", event => {
+  if (reducedMotion.matches) return;
+  const box = coach.getBoundingClientRect();
+  const eyeX = box.left + box.width * 0.5;
+  const eyeY = box.top + box.height * 0.3;
+  const clamp = value => Math.max(-5, Math.min(5, value));
+  coach.style.setProperty("--px", `${clamp((event.clientX - eyeX) / 60)}px`);
+  coach.style.setProperty("--py", `${clamp((event.clientY - eyeY) / 80)}px`);
+}, {passive: true});
 
 updateControls();
 cheer("Hey there. Good to see you!");

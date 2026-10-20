@@ -18,6 +18,7 @@ STATIC = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
+    "/favicon.svg": ("favicon.svg", "image/svg+xml; charset=utf-8"),
 }
 API_PATHS = {"/api/state", "/api/chat", "/api/memory/forget", "/api/memory/clear"}
 MAX_BODY = 16 * 1024

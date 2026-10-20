@@ -16,7 +16,7 @@ dev = ["pytest"]
 led-tasso = "led_tasso.cli:main"
 
 [tool.setuptools.package-data]
-led_tasso = ["persona.md", "web/*.html", "web/*.js", "web/*.css"]
+led_tasso = ["persona.md", "web/*.html", "web/*.js", "web/*.css", "web/*.svg"]
 
 [tool.setuptools.packages.find]
 include = ["led_tasso*"]
