@@ -1,6 +1,17 @@
 # Led Tasso
 
-A terminal chat with Coach Led Tasso, an original, encouraging small-town coach who remembers you.
+A chat with Coach Led Tasso, an original, encouraging small-town coach who remembers you, in your browser or terminal.
+
+## Try the website
+
+```sh
+git clone https://github.com/harinaralasetty/led-tasso.git && cd led-tasso
+python3 -m led_tasso --backend fake serve     # offline demo, open http://127.0.0.1:8765
+python3 -m led_tasso --backend claude serve   # real replies through your Claude Code CLI
+```
+
+Needs only Python 3.11+. Real replies need the `claude` (Claude Code) or `codex` CLI installed and logged in;
+the `fake` backend works with neither. The page runs on your own computer only.
 
 **Not affiliated:** This is an original character, not connected to any TV show, studio, or streaming service.
 
