@@ -17,5 +17,6 @@ def offline_home(monkeypatch, tmp_path):
         raise AssertionError("Tests must mock real CLI and network calls")
 
     monkeypatch.setattr(subprocess, "run", blocked)
+    monkeypatch.setattr(subprocess, "Popen", blocked)
     monkeypatch.setattr(socket.socket, "connect", blocked)
     monkeypatch.setattr(socket, "create_connection", blocked)

@@ -84,7 +84,11 @@ def run(args) -> None:
             if message == "/memory":
                 list_facts(data)
             elif message:
-                print(ask(store, data, args.backend, args.timeout, message))
+                try:
+                    print(ask(store, data, args.backend, args.timeout, message))
+                except BackendError as error:
+                    print("Coach hit a snag: " + " ".join(str(error).splitlines()),
+                          file=sys.stderr)
     elif args.action == "list":
         list_facts(data)
     elif args.action == "forget":

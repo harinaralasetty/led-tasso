@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+from .memory import new_facts
+
 
 CONTEXT_MARKER = "\nConversation data (JSON):\n"
 
@@ -16,21 +18,21 @@ def build_prompt(memory: dict, message: str) -> str:
 def parse_reply(output: str) -> tuple[str, list[str]]:
     """Find the first object with a nonempty reply, otherwise preserve the text."""
     decoder = json.JSONDecoder()
-    for index, char in enumerate(output):
-        if char != "{":
-            continue
+    index = 0
+    while (index := output.find("{", index)) != -1:
         try:
-            obj, _ = decoder.raw_decode(output, index)
+            obj, end = decoder.raw_decode(output, index)
         except ValueError:
+            index += 1
             continue
+        index = end
         if not isinstance(obj, dict) or not isinstance(obj.get("reply"), str):
             continue
         reply = obj["reply"].strip()
-        if not reply:
+        if not reply or reply == "<what Coach says>":
             continue
         remember = obj.get("remember", [])
         if not isinstance(remember, list):
             remember = []
-        facts = [fact.strip() for fact in remember if isinstance(fact, str) and fact.strip()]
-        return reply, facts
+        return reply, new_facts(remember)
     return output.strip(), []

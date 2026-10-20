@@ -1,6 +1,9 @@
 import json
+import os
 from pathlib import Path
+import signal
 import subprocess
+from types import SimpleNamespace
 
 import pytest
 
@@ -26,27 +29,43 @@ def test_exact_argv_and_overrides(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize("backend", ["claude", "codex"])
+@pytest.mark.parametrize("override", ["tool", "./tool", "../bin/tool", "~/bin/tool", ""])
+def test_binary_override_must_be_absolute(monkeypatch, tmp_path, backend, override):
+    variable = f"LED_TASSO_{backend.upper()}_BIN"
+    monkeypatch.setenv(variable, override)
+    with pytest.raises(BackendError, match=f"{variable} must be absolute"):
+        generate(backend, "private prompt")
+
+
+@pytest.mark.parametrize("backend", ["claude", "codex"])
 def test_cli_execution_isolated_and_cleanup(monkeypatch, backend):
     directories = []
     outputs = []
 
-    def run(argv, **kwargs):
+    def popen(argv, **kwargs):
         cwd = kwargs["cwd"]
         assert cwd.is_dir() and list(cwd.iterdir()) == []
         assert cwd != Path.cwd()
-        assert kwargs == {"input": "private prompt", "cwd": cwd, "capture_output": True,
-                          "text": True, "encoding": "utf-8", "timeout": 3.5, "check": False}
+        assert kwargs == {"cwd": cwd, "stdin": subprocess.PIPE, "stdout": subprocess.PIPE,
+                          "stderr": subprocess.PIPE, "text": True, "encoding": "utf-8",
+                          "start_new_session": True}
         directories.append(cwd)
+
+        def communicate(*, input, timeout):
+            assert input == "private prompt" and timeout == 3.5
+            return ('{"reply":"Final message","remember":[]}' if backend == "claude"
+                    else "ignore diagnostic stdout"), ""
+
         if backend == "codex":
             output = Path(argv[argv.index("--output-last-message") + 1])
             assert output.parent != cwd
             outputs.append(output)
             output.write_text('{"reply":"Final message","remember":[]}')
-            return subprocess.CompletedProcess(argv, 0, "ignore diagnostic stdout", "")
-        assert argv[1] == "-p"
-        return subprocess.CompletedProcess(argv, 0, '{"reply":"Final message","remember":[]}', "")
+        else:
+            assert argv[1] == "-p"
+        return SimpleNamespace(returncode=0, communicate=communicate)
 
-    monkeypatch.setattr(subprocess, "run", run)
+    monkeypatch.setattr(subprocess, "Popen", popen)
     for _ in range(2):
         assert parse_reply(generate(backend, "private prompt", 3.5)) == ("Final message", [])
     assert directories[0] != directories[1]
@@ -57,22 +76,31 @@ def test_cli_execution_isolated_and_cleanup(monkeypatch, backend):
 @pytest.mark.parametrize("failure", ["missing", "exit", "timeout", "permission", "empty", "output"])
 def test_backend_errors(monkeypatch, backend, failure, capsys):
     directories = []
+    killed = []
+    reaped = []
 
-    def run(argv, **kwargs):
+    def popen(argv, **kwargs):
         directories.append(kwargs["cwd"])
         if failure == "missing":
             raise FileNotFoundError("SECRET detail")
-        if failure == "timeout":
-            raise subprocess.TimeoutExpired(argv, 7, output="SECRET prompt")
         if failure == "permission":
             raise PermissionError("SECRET location")
-        if failure == "exit":
-            return subprocess.CompletedProcess(argv, 23, "SECRET stdout", "SECRET stderr")
         if backend == "codex" and failure == "empty":
             Path(argv[argv.index("--output-last-message") + 1]).write_text("")
-        return subprocess.CompletedProcess(argv, 0, "" if failure == "empty" else "fine", "")
 
-    monkeypatch.setattr(subprocess, "run", run)
+        def communicate(input=None, timeout=None):
+            if failure == "timeout":
+                if timeout is not None:
+                    raise subprocess.TimeoutExpired(argv, timeout, output="SECRET prompt")
+                assert killed == [(123456, signal.SIGKILL)]
+                reaped.append(True)
+            return ("" if failure == "empty" else "fine"), "SECRET stderr"
+
+        return SimpleNamespace(returncode=23 if failure == "exit" else 0,
+                               pid=123456, communicate=communicate)
+
+    monkeypatch.setattr(subprocess, "Popen", popen)
+    monkeypatch.setattr(os, "killpg", lambda pid, sig: killed.append((pid, sig)))
     if backend == "claude" and failure == "output":
         assert generate(backend, "SECRET prompt", 7) == "fine"
         return
@@ -84,6 +112,7 @@ def test_backend_errors(monkeypatch, backend, failure, capsys):
     assert "SECRET" not in message
     if failure == "timeout":
         assert "7s" in message and "--timeout" in message
+        assert killed == [(123456, signal.SIGKILL)] and reaped == [True]
     if failure == "exit":
         assert "exit 23" in message
     assert all(not directory.exists() for directory in directories)
@@ -91,11 +120,33 @@ def test_backend_errors(monkeypatch, backend, failure, capsys):
 
 
 def test_default_timeout(monkeypatch):
-    def run(argv, **kwargs):
-        assert kwargs["timeout"] == 120
-        return subprocess.CompletedProcess(argv, 0, "hello", "")
-    monkeypatch.setattr(subprocess, "run", run)
+    def communicate(*, input, timeout):
+        assert input == "prompt" and timeout == 120
+        return "hello", ""
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs:
+                        SimpleNamespace(returncode=0, communicate=communicate))
     assert generate("claude", "prompt") == "hello"
+
+
+def test_timeout_reaps_when_process_group_already_exited(monkeypatch):
+    calls = []
+
+    def communicate(input=None, timeout=None):
+        calls.append((input, timeout))
+        if timeout is not None:
+            raise subprocess.TimeoutExpired("mock CLI", timeout)
+        return "", ""
+
+    def killpg(pid, sig):
+        assert pid == 123456 and sig == signal.SIGKILL
+        raise ProcessLookupError
+
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs:
+                        SimpleNamespace(pid=123456, returncode=0, communicate=communicate))
+    monkeypatch.setattr(os, "killpg", killpg)
+    with pytest.raises(BackendError, match="timed out"):
+        generate("claude", "prompt", 0.1)
+    assert calls == [("prompt", 0.1), (None, None)]
 
 
 def test_fake_is_deterministic_and_only_remembers_explicit_supported_facts():

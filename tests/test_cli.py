@@ -15,10 +15,17 @@ from led_tasso.protocol import CONTEXT_MARKER
 
 # Only this explicit Python + fake invocation may escape the global subprocess block.
 REAL_RUN = subprocess.run
+REAL_POPEN = subprocess.Popen
 
 
-def test_end_to_end_fake_ask_and_memory_list(tmp_path):
+def test_end_to_end_fake_ask_and_memory_list(tmp_path, monkeypatch):
     env = {**os.environ, "LED_TASSO_HOME": str(tmp_path / "home")}
+
+    def popen(argv, **kwargs):
+        assert argv[:5] == [sys.executable, "-m", "led_tasso", "--backend", "fake"]
+        return REAL_POPEN(argv, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", popen)
 
     def run(*arguments):
         result = REAL_RUN([sys.executable, "-m", "led_tasso", "--backend", "fake", *arguments],
@@ -107,6 +114,36 @@ def test_chat_memory_and_exit(monkeypatch, capsys, exit_message):
     assert "1. User's name is Rowan." in output.out
     assert "Good to see you, Rowan." in output.out
     assert len(MemoryStore().load()["turns"]) == 2
+
+
+def test_chat_backend_failure_then_success_keeps_memory(monkeypatch, capsys):
+    store = MemoryStore()
+    data = store.load()
+    store.record(data, "earlier user", "earlier reply", ["User likes walks."])
+    before = store.path.read_bytes()
+    messages = iter(["failed turn", "successful turn", "/quit"])
+    calls = []
+
+    def generate(backend, prompt, timeout):
+        context = json.loads(prompt.split(CONTEXT_MARKER, 1)[1])
+        calls.append(context["user"])
+        assert context["facts"] == data["facts"]
+        assert context["turns"] == data["turns"]
+        assert store.path.read_bytes() == before
+        if len(calls) == 1:
+            raise BackendError("Claude CLI failed.\nInstall and log in.")
+        return '{"reply":"Welcome back.","remember":["User likes hills."]}'
+
+    monkeypatch.setattr(builtins, "input", lambda _: next(messages))
+    monkeypatch.setattr(cli, "generate", generate)
+    assert cli.main(["chat"]) == 0
+    assert calls == ["failed turn", "successful turn"]
+    output = capsys.readouterr()
+    assert output.err == "Coach hit a snag: Claude CLI failed. Install and log in.\n"
+    assert "Welcome back." in output.out
+    saved = store.load()
+    assert saved["turns"] == [*data["turns"], {"user": "successful turn", "coach": "Welcome back."}]
+    assert [fact["text"] for fact in saved["facts"]] == ["User likes walks.", "User likes hills."]
 
 
 @pytest.mark.parametrize("argv", [[], ["nonsense"], ["--backend", "bad", "ask", "hi"],

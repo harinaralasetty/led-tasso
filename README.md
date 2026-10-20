@@ -30,11 +30,14 @@ led-tasso memory clear --yes
 ```
 
 Global options go before the command. In chat, `/memory` lists facts; `/quit` or Ctrl-D exits.
+Backend failures print one friendly stderr line and leave memory unchanged; chat continues for another turn.
 `--backend` overrides `LED_TASSO_BACKEND`, which defaults to `claude`. `--timeout` is a positive number
-of seconds, default 120. Expected failures print one friendly stderr line and return exit status 1.
+of seconds, default 120. Outside chat's backend-error recovery, expected failures print one friendly
+stderr line and return exit status 1.
 
 Install and log into the chosen CLI separately. Binary defaults are `claude` and `codex` on PATH;
 `LED_TASSO_CLAUDE_BIN` and `LED_TASSO_CODEX_BIN` override the executable path (one executable, no embedded arguments).
+Overrides must be absolute paths; relative paths (including `~/...`) and empty values are rejected.
 For the bundled Codex on this machine, set:
 
 ```sh
@@ -56,12 +59,15 @@ These flags were checked against the installed `claude --help` and `<codex binar
 ```
 
 Each real invocation runs in a fresh, empty temporary working directory that is removed afterward.
+A timeout kills the whole subprocess group and reaps the process before reporting the error.
 Claude has tools, customizations, MCP servers, and session persistence disabled. Codex uses a read-only
 sandbox, ignores user config/rules, and uses an ephemeral session; only its final-message file is read.
 Fresh working directories avoid project discovery; they are not an OS-level guarantee against reading
-absolute paths elsewhere. The persona tells the model not to use tools. No live backend was exercised
-in development; the CLI wrappers were tested with mocked processes. Real backends send the provided
-conversation context to their CLI provider using the CLI's existing authentication.
+absolute paths elsewhere. The persona tells the model not to use tools. The manager checked both real
+backends on 2026-10-20; each answered two turns in character and stored the user's name plus one
+goal/worry (see REPORT.md for CLI versions). The offline test suite uses mocked CLI processes.
+Real backends send the provided conversation context to their CLI provider using the CLI's existing
+authentication.
 
 `fake` is deterministic and offline. It recognizes “My name is …” (one name token) and
 “I am training for …”, remembers those statements, and uses them in later replies. It returns JSON
@@ -69,11 +75,14 @@ through the same prompt/parsing/storage pipeline. It is a limited demo fixture, 
 
 ## Memory
 
-Memory lives at `$LED_TASSO_HOME/memory.json`, default `~/.led_tasso/memory.json`. Newly created home
-directories have mode 0700; atomic writes use a private temporary file in the same directory and
-`os.replace`. The JSON contains at most 50 case-insensitively deduplicated facts with UTC `added_at`
-timestamps and the last 10 user/coach exchanges. The persona, facts, recent exchanges, and current
-message are sent on every turn. The prompt requires facts explicitly stated by the user;
+Memory lives at `$LED_TASSO_HOME/memory.json`, default `~/.led_tasso/memory.json`. Home directories
+are created with mode 0700 and tightened to 0700 on every save; atomic writes use a private
+temporary file in the same directory and `os.replace`. The JSON contains at most 50
+case-insensitively deduplicated facts with UTC `added_at`
+timestamps and the last 10 user/coach exchanges. Each reply accepts at most five nonempty facts;
+whitespace is collapsed to single spaces and each fact is truncated to 200 characters.
+The persona, facts, recent exchanges, and current message are sent on every turn.
+The prompt requires facts explicitly stated by the user;
 the model is responsible for extracting them correctly.
 
 `memory list` prints numbered facts. `memory forget <n>` removes the numbered fact and resets recent

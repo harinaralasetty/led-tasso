@@ -42,6 +42,37 @@ def test_casefold_dedupe_keeps_original_timestamp(tmp_path):
     assert data["facts"] == [original]
 
 
+def test_fifty_junk_facts_keep_earlier_real_fact(tmp_path):
+    store = MemoryStore(tmp_path)
+    data = store.load()
+    store.record(data, "My name is Rowan", "Hello", ["User's name is Rowan."])
+    store.record(data, "next", "reply", [f"Junk {i}" for i in range(50)])
+    assert [fact["text"] for fact in store.load()["facts"]] == [
+        "User's name is Rowan.", *[f"Junk {i}" for i in range(5)],
+    ]
+
+
+@pytest.mark.parametrize("fact, expected", [
+    ("x" * (100 * 1024), "x" * 200),
+    ("  User\n likes\t long   walks.\r\n", "User likes long walks."),
+    (" \n\t ", None),
+], ids=["100KB", "newlines", "empty"])
+def test_record_sanitizes_facts(tmp_path, fact, expected):
+    store = MemoryStore(tmp_path)
+    data = store.load()
+    store.record(data, "question", "reply", [fact])
+    texts = [item["text"] for item in store.load()["facts"]]
+    assert texts == ([] if expected is None else [expected])
+
+
+def test_save_tightens_existing_directory_every_time(tmp_path):
+    store = MemoryStore(tmp_path)
+    for _ in range(2):
+        tmp_path.chmod(0o755)
+        store.save(empty_memory())
+        assert stat.S_IMODE(tmp_path.stat().st_mode) == 0o700
+
+
 def test_atomic_replace_and_private_file(monkeypatch, tmp_path):
     store = MemoryStore(tmp_path)
     old = empty_memory()

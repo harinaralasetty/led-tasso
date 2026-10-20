@@ -16,6 +16,20 @@ def empty_memory() -> dict:
     return {"facts": [], "turns": []}
 
 
+def clean_fact(text: str) -> str:
+    return " ".join(text.split())[:200].rstrip()
+
+
+def new_facts(remember: list) -> list[str]:
+    facts = []
+    for fact in remember:
+        if isinstance(fact, str) and (text := clean_fact(fact)):
+            facts.append(text)
+            if len(facts) == 5:
+                break
+    return facts
+
+
 def normalize(data: dict) -> dict:
     if not isinstance(data, dict):
         raise ValueError("Memory must be an object")
@@ -28,7 +42,7 @@ def normalize(data: dict) -> dict:
                 or not isinstance(fact.get("text"), str)
                 or not isinstance(fact.get("added_at"), str)):
             raise ValueError("Invalid fact")
-        text = fact["text"].strip()
+        text = clean_fact(fact["text"])
         if text and text.casefold() not in seen:
             unique.append({"text": text, "added_at": fact["added_at"]})
             seen.add(text.casefold())
@@ -64,6 +78,7 @@ class MemoryStore:
     def save(self, data: dict) -> None:
         data = normalize(data)
         self.home.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.home.chmod(0o700)
         fd, name = tempfile.mkstemp(prefix=".memory-", suffix=".tmp", dir=self.home)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as stream:
@@ -76,7 +91,7 @@ class MemoryStore:
             Path(name).unlink(missing_ok=True)
 
     def record(self, data: dict, user: str, reply: str, remember: list[str]) -> None:
-        for text in remember:
+        for text in new_facts(remember):
             data["facts"].append({"text": text, "added_at": timestamp()})
         data["turns"].append({"user": user, "coach": reply})
         updated = normalize(data)

@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import tempfile
 
@@ -15,6 +16,9 @@ class BackendError(Exception):
 
 
 def backend_argv(backend: str, output: Path) -> list[str]:
+    override = os.environ.get(f"LED_TASSO_{backend.upper()}_BIN")
+    if override is not None and not Path(override).is_absolute():
+        raise BackendError(f"LED_TASSO_{backend.upper()}_BIN must be absolute.")
     if backend == "claude":
         return [os.environ.get("LED_TASSO_CLAUDE_BIN", "claude"),
                 "-p", "--output-format", "text", "--safe-mode", "--tools", "",
@@ -74,19 +78,27 @@ def generate(backend: str, prompt: str, timeout: float = 120) -> str:
         output = root / "reply.txt"
         argv = backend_argv(backend, output)
         try:
-            result = subprocess.run(argv, input=prompt, cwd=work, capture_output=True,
-                                    text=True, encoding="utf-8", timeout=timeout, check=False)
+            proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, cwd=work, text=True,
+                                    encoding="utf-8", start_new_session=True)
+            try:
+                stdout, _ = proc.communicate(input=prompt, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                proc.communicate()
+                raise BackendError(f"{label} CLI timed out after {timeout:g}s. "
+                                   f"Check CLI login or increase --timeout. {remedy}") from None
         except FileNotFoundError:
             raise BackendError(f"{label} CLI was not found. {remedy}") from None
-        except subprocess.TimeoutExpired:
-            raise BackendError(f"{label} CLI timed out after {timeout:g}s. "
-                               f"Check CLI login or increase --timeout. {remedy}") from None
         except (OSError, UnicodeError):
             raise BackendError(f"{label} CLI could not run or return readable text. {remedy}") from None
-        if result.returncode != 0:
-            raise BackendError(f"{label} CLI failed (exit {result.returncode}). {remedy}")
+        if proc.returncode != 0:
+            raise BackendError(f"{label} CLI failed (exit {proc.returncode}). {remedy}")
         try:
-            reply = output.read_text(encoding="utf-8") if backend == "codex" else result.stdout
+            reply = output.read_text(encoding="utf-8") if backend == "codex" else stdout
         except (OSError, UnicodeError):
             raise BackendError(f"{label} CLI did not write a readable final message. {remedy}") from None
         if not reply.strip():
