@@ -113,3 +113,106 @@ were added.
 8. **Fixed: documentation.** `test_review_round_one_documentation` checks the absolute-path
    rule, removal of obsolete live-check claims, the manager's supplied live-check facts,
    and this resolution section.
+
+## Round 3: web UI
+
+Added `serve` with loopback defaults, remote opt-in warning, strict Host/Origin/JSON checks,
+bounded request bodies and messages, fixed static-file routes, and serialized memory operations.
+Web chat calls `cli.ask` directly, preserving prompt building, parsing, backend handling,
+and memory rules. Access logs redact unknown paths and queries and contain only method,
+safe path, and status. Backend errors return a friendly one-line JSON error with HTTP 502.
+
+The page has an original inline SVG coach with idle/thinking/talking/cheer states,
+light/dark themes, reduced-motion handling, text-node rendering, one full-reply live
+announcement, and memory controls with an explicit clear confirmation. Added `make serve`,
+cwd-independent Make targets, package data for the assets, and the README Web UI section.
+
+### Offline verification
+
+`make test` (exit 0):
+
+```text
+cd '.' && './.venv/bin/python' -m pytest -q
+........................................................................ [ 27%]
+..............................ssss....ssssssssssss............s.sssssss. [ 54%]
+......s.ssssss......s.ssss....s.ssss....sssssssssssssss...............s. [ 81%]
+sss...s.ss..s.s.s.sssssss.......s.s.....s........                        [100%]
+189 passed, 76 skipped in 0.62s
+```
+
+All 102 existing tests are retained. The added tests run the HTTP handlers using both
+an ephemeral port-0 threaded server and an in-memory HTTP transport. In this worker's
+sandbox, binding sockets raises `PermissionError: [Errno 1] Operation not permitted`.
+Only the 76 socket cases are skipped on EPERM/EACCES; their in-memory counterparts run.
+There are no skips for other binding errors. The 87 passing new cases cover static files
+and types, traversal, state, chat through `cli.ask`, remembered facts and deduplication,
+message/body limits, malformed JSON, security headers, duplicate headers, backend failure,
+memory controls, concurrent turns, private logs, remote opt-in, CLI options, clean shutdown,
+local-only assets, safe text rendering, and both themes' text contrast of at least 4.5:1.
+
+From `/private/tmp`, both commands below also returned exit 0:
+
+```sh
+make -f './Makefile' test
+'./.venv/bin/python' -m pytest './tests' -q
+```
+
+Their respective summary output:
+
+```text
+189 passed, 76 skipped in 0.63s
+189 passed, 76 skipped in 0.64s
+```
+
+`make demo` (exit 0):
+
+```text
+Good to see you, Rowan. For a 5K, pick one small practice step you can manage today. Even a muddy field gets crossed one boot at a time.
+Good to see you, Rowan. For a 5K, pick one small practice step you can manage today. Even a muddy field gets crossed one boot at a time.
+1. User's name is Rowan.
+2. User is training for a 5K.
+```
+
+`node --check led_tasso/web/app.js` and `git diff --check` returned exit 0 with no output.
+A temporary Node VM harness using built-in modules and simulated DOM/fetch objects ran
+`app.js` without network access (`node /private/tmp/led-tasso-web-ui-check.cjs`, exit 0):
+
+```text
+Frontend behavior checks passed: text-only rendering, thinking/talking/cheer, busy controls, reduced motion, single reply announcement, forget, clear confirmation/cancel, and server error display.
+```
+
+This harness is supplemental; it is not a real browser integration test or a required
+test dependency. The application still needs only Python's standard library at runtime.
+
+Built a wheel offline with
+`.venv/bin/python -m pip wheel . --no-deps --no-build-isolation --wheel-dir /private/tmp/led-tasso-wheel-check`
+(exit 0). The build command's concluding output was:
+
+```text
+Successfully built led-tasso
+```
+
+A Python `zipfile.ZipFile` check asserted that the wheel contains `led_tasso/web.py`,
+`led_tasso/web/index.html`, `led_tasso/web/app.js`, and `led_tasso/web/style.css` (exit 0):
+
+```text
+Wheel contains web server and all three static assets.
+```
+
+### Environment limitation and remaining manager check
+
+The required launch command was attempted:
+
+```sh
+python3 -m led_tasso --backend fake serve --port 8799
+```
+
+It exited 1 because this sandbox forbids socket binding; the friendly output was:
+
+```text
+Coach hit a snag: Can't start the local server; check socket permissions and port availability.
+```
+
+The live loopback HTTP cases and real-browser chat acceptance remain for the manager
+outside this sandbox. No real Claude/Codex commands were invoked in this round, and
+no commits were made.

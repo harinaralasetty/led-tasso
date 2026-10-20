@@ -46,6 +46,14 @@ def make_parser() -> Parser:
     forget.add_argument("number", type=int)
     clear = actions.add_parser("clear", help="Clear facts and recent conversation")
     clear.add_argument("--yes", action="store_true", help="Skip confirmation")
+    serve = commands.add_parser("serve", help="Open the local Coach website")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument("--allow-remote", action="store_true",
+                       help="Allow other hosts (no login; exposes memory)")
+    # Accept these options on either side of 'serve', preserving global defaults.
+    serve.add_argument("--backend", choices=("claude", "codex", "fake"), default=argparse.SUPPRESS)
+    serve.add_argument("--timeout", type=positive_timeout, default=argparse.SUPPRESS)
     return parser
 
 
@@ -68,6 +76,10 @@ def ask(store: MemoryStore, data: dict, backend: str, timeout: float, message: s
 def run(args) -> None:
     if args.backend not in ("claude", "codex", "fake"):
         raise ValueError("Choose a backend: claude, codex, or fake.")
+    if args.command == "serve":
+        from .web import serve
+        serve(args.host, args.port, args.backend, args.timeout, args.allow_remote)
+        return
     store = MemoryStore()
     data = store.load()
     if args.command == "ask":

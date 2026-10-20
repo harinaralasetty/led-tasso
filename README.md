@@ -29,7 +29,8 @@ led-tasso memory clear
 led-tasso memory clear --yes
 ```
 
-Global options go before the command. In chat, `/memory` lists facts; `/quit` or Ctrl-D exits.
+Global options go before the command; `serve` also accepts `--backend` and `--timeout` after it.
+In chat, `/memory` lists facts; `/quit` or Ctrl-D exits.
 Backend failures print one friendly stderr line and leave memory unchanged; chat continues for another turn.
 `--backend` overrides `LED_TASSO_BACKEND`, which defaults to `claude`. `--timeout` is a positive number
 of seconds, default 120. Outside chat's backend-error recovery, expected failures print one friendly
@@ -73,6 +74,38 @@ authentication.
 “I am training for …”, remembers those statements, and uses them in later replies. It returns JSON
 through the same prompt/parsing/storage pipeline. It is a limited demo fixture, not a general language model.
 
+## Web UI
+
+```sh
+make serve
+# Or, from the checkout (no installation needed):
+python3 -m led_tasso --backend fake serve --port 8799
+# After installation, either option position works:
+led-tasso serve --backend fake --host 127.0.0.1 --port 8765 --timeout 120
+```
+
+`make serve` uses the offline fake backend at **http://127.0.0.1:8765**. The second command
+uses **http://127.0.0.1:8799**. Open the printed URL in your browser; Ctrl-C stops the server.
+Choose `claude` or `codex` to use an installed, logged-in CLI. The web chat calls the same
+`ask` pipeline as the terminal and uses the same memory home. The fake demo recognizes
+“My name is Rowan” and “I am training for a 5K” and remembers them for the next message.
+
+An original SVG coach waves hello, thinks while waiting, and talks as replies appear.
+The page supports light/dark system themes, phones from 360 px, keyboard controls,
+screen-reader reply announcements, and reduced motion (immediate replies, static coach).
+Enter sends; Shift+Enter adds a newline. Open **What Coach remembers** to forget a fact
+or clear all memory after confirming. Forget/clear also reset recent conversation context.
+The visible conversation remains until you reload. The page loads no external resources.
+
+The default host is `127.0.0.1`; all other `--host` values require `--allow-remote`.
+Requests must use `127.0.0.1:<port>` or `localhost:<port>` in their Host header unless
+remote access is enabled. JSON POST requests must come from the same origin when an
+Origin header is present. With `--allow-remote`, a startup warning explains that there
+is **no login: anyone who can reach the server can read the memory**. Browser origin
+checks remain enabled. Use remote access only on a network you trust.
+
+Screenshot placeholder: desktop coach stage beside the conversation, with the memory drawer open.
+
 ## Memory
 
 Memory lives at `$LED_TASSO_HOME/memory.json`, default `~/.led_tasso/memory.json`. Home directories
@@ -98,5 +131,6 @@ for manual recovery; clear/forget affect active memory only. Memory is local pla
 - `protocol.py`: persona/context prompt assembly and tolerant JSON reply parsing.
 - `backends.py`: isolated subprocess wrappers and deterministic fake JSON generator.
 - `memory.py`: schema validation, bounded history/facts, atomic saves, and recovery.
+- `web.py` and `web/`: local threaded HTTP server, original SVG coach, accessible offline page.
 - `tests/`: offline protocol, storage, command, mocked subprocess, and end-to-end checks.
-- `Makefile`: reproducible test and temporary-home demo commands.
+- `Makefile`: cwd-independent tests, temporary-home demo, and offline web server.
