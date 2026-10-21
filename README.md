@@ -2,7 +2,19 @@
 
 A chat with Coach Led Tasso, an original, encouraging small-town coach who remembers you, in your browser or terminal.
 
-## Try the website
+## Try it in your browser
+
+Open **[Led Tasso on the web](https://harinaralasetty.github.io/led-tasso/)**. No install or account is needed.
+
+- **Demo replies:** free, original scripted coaching, offline after the page loads.
+- **Your API key:** bring an Anthropic key, kept only in your browser. Usage is billed to your account. Forget it anytime in Settings.
+- **Friends passcode:** use the owner's optional service with a privately shared passcode, when configured.
+
+The new app has a 3D coach, streaming replies, browser-local memory, dark/light themes and a calm SVG coach for reduced motion or unavailable WebGL. It is an original character, not affiliated with any show, studio or streaming service. API modes send your message and recent context to Anthropic, through the owner's proxy in friends mode. Demo stays local.
+
+See [browser development and tests](site/README.md), [friends service deployment](proxy/README.md), and [coach screenshots](site/screenshots/). The Python package below remains available and uses its own local memory.
+
+## Try the Python website
 
 ```sh
 git clone https://github.com/harinaralasetty/led-tasso.git && cd led-tasso

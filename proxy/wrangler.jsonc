@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "led-tasso-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "kv_namespaces": [
+    { "binding": "LIMITS", "id": "92d6136a90994cf1bd0fb7aae6024458" },
+  ],
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 6, "period": 60 },
+    },
+  ],
+}

@@ -1,0 +1,16 @@
+{
+  "name": "led-tasso-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit",
+    "test": "npm --prefix ../site test -- ../proxy/tests"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.45.0"
+  }
+}

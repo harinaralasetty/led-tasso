@@ -1,0 +1,77 @@
+name: Test and publish browser app
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            site/package-lock.json
+            proxy/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Existing Python tests
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m pytest -q
+      - name: Install browser and proxy dependencies
+        run: |
+          npm --prefix site ci
+          npm --prefix proxy ci
+      - name: Unit tests, Worker tests and type checks
+        run: |
+          npm --prefix site test
+          npm --prefix proxy run check
+      - name: Package Worker without deploying
+        working-directory: proxy
+        run: npx wrangler deploy --dry-run --outdir /tmp/led-tasso-worker-build
+      - name: Install Chromium
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests and screenshots
+        run: npm --prefix site run test:e2e
+      - name: Save browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: |
+            site/screenshots/
+            site/playwright-report/
+            site/test-results/
+      - name: Build Pages with public friends endpoint
+        env:
+          VITE_PROXY_URL: ${{ vars.LED_TASSO_PROXY_URL || 'https://led-tasso-proxy.harinaralasetty.workers.dev' }}
+        run: npm --prefix site run build
+      - name: Upload Pages build
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test-build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
