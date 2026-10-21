@@ -1,5 +1,7 @@
 # Led Tasso
 
+By [Hari Naralasetty](https://github.com/harinaralasetty) · [GitHub](https://github.com/harinaralasetty) · [LinkedIn](https://www.linkedin.com/in/harinaralasetty).
+
 A chat with Coach Led Tasso, an original, encouraging small-town coach who remembers you, in your browser or terminal.
 
 ## Try it in your browser

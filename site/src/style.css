@@ -615,6 +615,10 @@ textarea::placeholder {
 .footer > span:first-child {
   letter-spacing: 0.5px;
 }
+.footer a {
+  color: inherit;
+  text-decoration: underline;
+}
 dialog {
   color: var(--text);
   border: 1px solid var(--line);
