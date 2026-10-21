@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import {
+import worker, {
   ALLOWED_ORIGIN,
   handleRequest,
   passcodesEqual,
@@ -264,7 +264,7 @@ describe("friends Worker", () => {
     expect(await result.text()).toBe("data: hello\n\n");
     const [url, options] = fetcher.mock.calls[0];
     expect(url).toBe("https://api.anthropic.com/v1/messages");
-    expect(options?.redirect).toBe("error");
+    expect(options?.redirect).toBe("manual");
     expect(options?.headers).toEqual({
       "Content-Type": "application/json",
       "anthropic-version": "2023-06-01",
@@ -289,5 +289,19 @@ describe("friends Worker", () => {
   it("maps network failures", async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValue(Error("secret"));
     expect((await handleRequest(request(), env, fetcher)).status).toBe(502);
+  });
+  it("the exported fetch handler ignores the runtime's third ctx argument", async () => {
+    const upstream = vi.fn(async () =>
+      new Response("data: {}\n\n", { headers: { "Content-Type": "text/event-stream" } }),
+    );
+    vi.stubGlobal("fetch", upstream);
+    try {
+      const ctx = { waitUntil() {}, passThroughOnException() {} };
+      const response = await (worker.fetch as (r: Request, e: Env, c: unknown) => Promise<Response>)(request(), env, ctx);
+      expect(response.status).toBe(200);
+      expect(upstream).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

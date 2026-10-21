@@ -127,7 +127,7 @@ export function validateBody(body: unknown): {
 export async function handleRequest(
   request: Request,
   env: Env,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = (input, init) => fetch(input, init),
 ): Promise<Response> {
   if (request.headers.get("Origin") !== ALLOWED_ORIGIN)
     return new Response("This origin is not allowed.", { status: 403 });
@@ -219,7 +219,8 @@ export async function handleRequest(
       },
       body: JSON.stringify(payload),
       signal: request.signal,
-      redirect: "error",
+      // Workers only support "follow" and "manual"; "error" throws.
+      redirect: "manual",
     });
     if (!upstream.ok)
       return error(
@@ -236,8 +237,10 @@ export async function handleRequest(
     return new Response(upstream.body, {
       headers: { ...cors, "Content-Type": "text/event-stream" },
     });
-  } catch {
+  } catch (cause) {
+    console.error("upstream fetch failed", cause instanceof Error ? cause.name + ": " + cause.message : "unknown");
     return error("Coach could not connect. Please try again in a moment.", 502);
   }
 }
-export default { fetch: handleRequest };
+// The runtime passes (request, env, ctx); keep ctx out of handleRequest's injectable fetcher.
+export default { fetch: (request: Request, env: Env) => handleRequest(request, env) };
