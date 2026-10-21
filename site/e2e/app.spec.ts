@@ -24,6 +24,10 @@ async function idle(page: Page) {
   await expect(page.locator("#coach")).toHaveAttribute("data-state", "idle");
 }
 async function checkAxe(page: Page) {
+  // Theme switches fade button backgrounds; audit the settled colours, not a mid-transition frame.
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => !(a instanceof CSSTransition)),
+  );
   const result = await new AxeBuilder({ page }).analyze();
   expect(
     result.violations.filter(
@@ -158,6 +162,37 @@ test("demo streams, saves facts, reloads and forgets context", async ({
   await page.reload();
   await expect(page.locator("#memory-count")).toHaveText("0 facts");
   await expect(page.locator("#messages")).not.toContainText("Rowan");
+});
+
+test("natural demo introduction answers the event and remembers both facts", async ({
+  page,
+}) => {
+  await start(page);
+  await send(
+    page,
+    "Hi coach, my name is Sam and I have a big presentation tomorrow.",
+  );
+  await expect(page.locator("#memory-count")).toHaveText("2 facts");
+  await idle(page);
+  const reply = page.locator(".coach-message .bubble").last();
+  await expect(reply).toContainText("Sam");
+  await expect(reply).toContainText("presentation");
+  await expect(reply).not.toContainText("Pull up a spot on the bench");
+  await page.getByRole("button", { name: "What Coach remembers" }).click();
+  await expect(page.locator("#facts li")).toHaveCount(2);
+  await expect(page.locator("#facts")).toContainText("Name: Sam");
+  await expect(page.locator("#facts")).toContainText(
+    "Upcoming: a big presentation tomorrow",
+  );
+  await checkAxe(page);
+  await page.keyboard.press("Escape");
+  await page.reload();
+  await expect(page.locator("#memory-count")).toHaveText("2 facts");
+  await page.getByRole("button", { name: "What Coach remembers" }).click();
+  await expect(page.locator("#facts")).toContainText("Name: Sam");
+  await expect(page.locator("#facts")).toContainText(
+    "Upcoming: a big presentation tomorrow",
+  );
 });
 
 test("own key uses direct streaming, exact headers, plain text and no key leaks", async ({
@@ -495,7 +530,7 @@ test("WebGL unavailable keeps the SVG coach and chat usable", async ({
   await send(page, "hello");
   await idle(page);
   await expect(page.locator(".coach-message .bubble").last()).toContainText(
-    "Hey there",
+    /^(Hello|Hi)! /,
   );
 });
 
