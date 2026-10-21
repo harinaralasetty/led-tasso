@@ -144,6 +144,13 @@ describe("friends Worker", () => {
       output,
     );
   });
+  it("pins effort to low and ignores a caller-supplied output_config", () => {
+    expect(validateBody(payload)?.output_config).toEqual({ effort: "low" });
+    expect(
+      validateBody({ ...payload, output_config: { effort: "max" } })
+        ?.output_config,
+    ).toEqual({ effort: "low" });
+  });
   it("keeps only ten recent exchanges and caps each message's characters", () => {
     const messages = Array.from({ length: 25 }, (_, i) => ({
       role: i % 2 ? "assistant" : "user",
@@ -159,7 +166,7 @@ describe("friends Worker", () => {
       ),
     ).toBe(true);
   });
-  it("allows 30 requests per hashed IP and hour, expires counters, resets next hour", async () => {
+  it("allows 100 requests per hashed IP and day, expires counters, resets next day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-21T10:15:00Z"));
     const fetcher = vi
@@ -171,7 +178,7 @@ describe("friends Worker", () => {
           }),
       );
     const headers = { "CF-Connecting-IP": "192.0.2.1" };
-    for (let i = 0; i < 30; i++)
+    for (let i = 0; i < 100; i++)
       expect(
         (await handleRequest(request(payload, headers), env, fetcher)).status,
       ).toBe(200);
@@ -181,14 +188,15 @@ describe("friends Worker", () => {
       fetcher,
     );
     expect(blocked.status).toBe(429);
-    expect(blocked.headers.get("Retry-After")).toBe("2700");
-    expect(await blocked.text()).toContain("45 minutes");
-    expect(fetcher).toHaveBeenCalledTimes(30);
+    // 10:15 UTC to midnight is 13h45m.
+    expect(blocked.headers.get("Retry-After")).toBe("49500");
+    expect(await blocked.text()).toContain("13 hours 45 minutes");
+    expect(fetcher).toHaveBeenCalledTimes(100);
     const kv = env.LIMITS as FakeKV;
     const key = kv.put.mock.calls[0][0];
     expect(key).toMatch(/^[a-f0-9]{64}:\d+$/);
     expect(key).not.toContain("192.0.2.1");
-    expect(kv.put.mock.calls[0][2]).toEqual({ expirationTtl: 7200 });
+    expect(kv.put.mock.calls[0][2]).toEqual({ expirationTtl: 172800 });
     expect(
       (
         await handleRequest(
@@ -198,13 +206,18 @@ describe("friends Worker", () => {
         )
       ).status,
     ).toBe(200);
+    // Still the same UTC day: the old hourly reset must no longer release the cap.
     vi.setSystemTime(new Date("2026-10-21T11:00:00Z"));
+    expect(
+      (await handleRequest(request(payload, headers), env, fetcher)).status,
+    ).toBe(429);
+    vi.setSystemTime(new Date("2026-10-22T00:00:00Z"));
     expect(
       (await handleRequest(request(payload, headers), env, fetcher)).status,
     ).toBe(200);
   });
-  it("counts failed passwords toward the hourly cap too", async () => {
-    for (let i = 0; i < 30; i++)
+  it("counts failed passwords toward the daily cap too", async () => {
+    for (let i = 0; i < 100; i++)
       expect(
         (
           await handleRequest(
@@ -275,6 +288,7 @@ describe("friends Worker", () => {
     expect(body.system).toContain("You are Coach Led Tasso");
     expect(body.system).toContain("self-harm");
     expect(body.max_tokens).toBe(400);
+    expect(body.output_config).toEqual({ effort: "low" });
     expect(body.system).toContain("Name: Rowan");
     expect(body.system).not.toContain("CALLER_INJECTED_SYSTEM");
   });

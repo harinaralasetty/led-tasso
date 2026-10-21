@@ -104,6 +104,7 @@ describe("Anthropic client", () => {
       messages: [{ role: "user", content: "hi" }],
     });
     expect(body.system).toContain("self-harm");
+    expect(body.output_config).toEqual({ effort: "low" });
     expect(options?.credentials).toBe("omit");
     expect(options?.redirect).toBe("error");
   });
@@ -135,6 +136,8 @@ describe("Anthropic client", () => {
     });
     const body = JSON.parse(String(options?.body));
     expect(body).not.toHaveProperty("system");
+    // The Worker sets the effort itself; a caller value would be discarded anyway.
+    expect(body).not.toHaveProperty("output_config");
     expect(body.model).toBe("claude-haiku-5-5");
     expect(body.max_tokens).toBe(400);
   });
@@ -157,7 +160,7 @@ describe("Anthropic client", () => {
       ).rejects.toThrow(errorFor(status));
     },
   );
-  it("preserves the friends hourly retry time without exposing the response body", async () => {
+  it("preserves the friends daily retry time without exposing the response body", async () => {
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValue(
