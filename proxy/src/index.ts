@@ -1,6 +1,14 @@
 import { isRecord } from "../../site/src/types";
 import { cleanFacts } from "../../site/src/memory";
 import { systemPrompt } from "../../site/src/persona";
+import {
+  COUNTER_TTL_SECONDS,
+  DAILY_MESSAGE_LIMIT,
+  DAY_MS,
+  EFFORT,
+  describeWait,
+  secondsUntilNextDay,
+} from "../../site/src/limits";
 export const ALLOWED_ORIGIN = "https://harinaralasetty.github.io";
 export const MAX_BYTES = 32_768;
 export interface Env {
@@ -88,6 +96,7 @@ export function validateBody(body: unknown): {
   stream: true;
   messages: { role: "user" | "assistant"; content: string }[];
   system: string;
+  output_config: { effort: typeof EFFORT };
 } | null {
   if (
     !isRecord(body) ||
@@ -122,6 +131,8 @@ export function validateBody(body: unknown): {
     stream: true,
     messages,
     system: systemPrompt(cleanFacts(body.memory)),
+    // Set here, never by the caller: the owner pays, so the owner picks the effort.
+    output_config: { effort: EFFORT },
   };
 }
 export async function handleRequest(
@@ -154,7 +165,8 @@ export async function handleRequest(
       ).success
     )
       return error("Take a breather and try again in 60 seconds.", 429, 60);
-    const hour = Math.floor(Date.now() / 3_600_000);
+    const now = Date.now();
+    const day = Math.floor(now / DAY_MS);
     const ip = request.headers.get("CF-Connecting-IP") || "unknown";
     const digest = await crypto.subtle.digest(
       "SHA-256",
@@ -163,23 +175,22 @@ export async function handleRequest(
     const hash = Array.from(new Uint8Array(digest), (byte) =>
       byte.toString(16).padStart(2, "0"),
     ).join("");
-    const key = `${hash}:${hour}`;
+    const key = `${hash}:${day}`;
     const count = Number((await env.LIMITS.get(key)) || "0");
     if (!Number.isSafeInteger(count) || count < 0)
       throw Error("Invalid limit counter");
-    if (count >= 30) {
-      const retry = Math.max(
-        1,
-        Math.ceil(((hour + 1) * 3_600_000 - Date.now()) / 1000),
-      );
+    if (count >= DAILY_MESSAGE_LIMIT) {
+      const retry = secondsUntilNextDay(now);
       return error(
-        `You have reached 30 requests this hour. Try again in ${Math.ceil(retry / 60)} minutes, when the next hour starts.`,
+        `You have reached ${DAILY_MESSAGE_LIMIT} messages today. Try again in ${describeWait(retry)}, when the next day starts (UTC).`,
         429,
         retry,
       );
     }
     // KV read/modify/write is eventually consistent, so this is an approximate cap.
-    await env.LIMITS.put(key, String(count + 1), { expirationTtl: 7200 });
+    await env.LIMITS.put(key, String(count + 1), {
+      expirationTtl: COUNTER_TTL_SECONDS,
+    });
   } catch {
     return error("The friends service is temporarily unavailable.", 503);
   }

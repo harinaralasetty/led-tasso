@@ -1,4 +1,5 @@
 import { systemPrompt } from "./persona";
+import { EFFORT, describeWait } from "./limits";
 import { readSSE } from "./sse";
 import type { Connection, Memory, Message } from "./types";
 export class ServiceError extends Error {
@@ -53,7 +54,11 @@ export async function* streamReply(
     headers["x-api-key"] = connection.key;
     headers["anthropic-version"] = "2023-06-01";
     headers["anthropic-dangerous-direct-browser-access"] = "true";
-    payload = { ...body, system: systemPrompt(memory.facts) };
+    payload = {
+      ...body,
+      system: systemPrompt(memory.facts),
+      output_config: { effort: EFFORT },
+    };
   } else {
     url = connection.url;
     headers["Authorization"] = `Bearer ${connection.passcode}`;
@@ -90,7 +95,7 @@ export async function* streamReply(
       if (response.status === 429) {
         const seconds = Number(response.headers.get("Retry-After"));
         if (Number.isFinite(seconds) && seconds > 0)
-          message = `A little breather. The request limit was reached. Try again in ${Math.ceil(seconds / 60)} minutes.`;
+          message = `A little breather. The request limit was reached. Try again in ${describeWait(seconds)}.`;
       }
     }
     throw new ServiceError(message, response.status);
